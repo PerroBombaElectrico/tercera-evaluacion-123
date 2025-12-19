@@ -286,7 +286,7 @@ def _validate_date(date_str: Optional[str]) -> Optional[str]:
 def _validate_username(username: str) -> bool:
     if not username or len(username) < 3 or len(username) > 32:
         return False
-    return bool(re.match(r"^[A-Za-z0-9_.-]+$", username))
+    return bool(re.match(r"^[A-Za-z0-9_.-]+$",username))
 
 
 def _validate_password(password: str) -> bool:
@@ -453,12 +453,19 @@ def run_cli():
 
 if __name__ == "__main__":
     load_dotenv()
-
+    username=os.getenv("ORACLE_USER"),
+    password=os.getenv("ORACLE_PASSWORD"),
+    dsn=os.getenv("ORACLE_DSN")
+    
     db = Database(
         username=os.getenv("ORACLE_USER"),
         password=os.getenv("ORACLE_PASSWORD"),
         dsn=os.getenv("ORACLE_DSN")
     )
+
+    print(username,
+    password,
+    dsn)
 
     run_cli()
 
