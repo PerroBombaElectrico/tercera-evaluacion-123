@@ -1,3 +1,4 @@
+
 import datetime
 import json
 import os
@@ -9,7 +10,9 @@ import bcrypt
 import oracledb
 import requests
 from dotenv import load_dotenv
+from colorama import init, Fore, Style
 
+init(autoreset=True)
 load_dotenv()
 
 class Database:
@@ -291,7 +294,9 @@ def _validate_password(password: str) -> bool:
 
 
 def prompt_register(db: Database):
-    print("== Registro de usuario ==")
+    print(Fore.CYAN + "╔" + "═"*30 + "╗")
+    print(Fore.CYAN + "║" + Style.BRIGHT + "{:^30}".format("Registro de usuario") + Style.RESET_ALL + Fore.CYAN + "║")
+    print(Fore.CYAN + "╚" + "═"*30 + "╝" + Style.RESET_ALL)
     while True:
         try:
             id_str = input("ID (numero entero) [enter para generar]: ").strip()
@@ -301,23 +306,23 @@ def prompt_register(db: Database):
                 user_id = int(id_str)
             break
         except Exception:
-            print("ID inválido, ingrese un número entero")
+            print(Fore.RED + "ID inválido, ingrese un número entero" + Style.RESET_ALL)
 
     while True:
         username = input("Usuario: ").strip()
         if not _validate_username(username):
-            print("Nombre de usuario inválido. Sólo letras, números y . _ - (3-32 chars)")
+            print(Fore.RED + "Nombre de usuario inválido. Sólo letras, números y . _ - (3-32 chars)" + Style.RESET_ALL)
             continue
         break
 
     while True:
         password = input("Contraseña: ").strip()
         if not _validate_password(password):
-            print("Contraseña inválida. Mínimo 6 caracteres")
+            print(Fore.RED + "Contraseña inválida. Mínimo 6 caracteres" + Style.RESET_ALL)
             continue
         confirm = input("Confirmar contraseña: ").strip()
         if password != confirm:
-            print("Las contraseñas no coinciden")
+            print(Fore.RED + "Las contraseñas no coinciden" + Style.RESET_ALL)
             continue
         break
 
@@ -325,11 +330,13 @@ def prompt_register(db: Database):
 
 
 def prompt_login(db: Database) -> Optional[int]:
-    print("== Login ==")
+    print(Fore.CYAN + "╔" + "═"*30 + "╗")
+    print(Fore.CYAN + "║" + Style.BRIGHT + "{:^30}".format("Login") + Style.RESET_ALL + Fore.CYAN + "║")
+    print(Fore.CYAN + "╚" + "═"*30 + "╝" + Style.RESET_ALL)
     username = input("Usuario: ").strip()
     password = input("Contraseña: ").strip()
     if not _validate_username(username) or not _validate_password(password):
-        print("Credenciales con formato inválido")
+        print(Fore.RED + "Credenciales con formato inválido" + Style.RESET_ALL)
         return None
     user_id = Auth.login(db, username, password)
     return user_id
@@ -345,23 +352,26 @@ def indicators_menu(finance: Finance, db: Database, user_id: int):
         "6": ("UTM", finance.get_utm),
     }
     while True:
-        print("\n-- Indicadores --")
+        print(Fore.YELLOW + "\n╔" + "═"*30 + "╗")
+        print(Fore.YELLOW + "║" + Style.BRIGHT + "{:^30}".format("Menú de Indicadores") + Style.RESET_ALL + Fore.YELLOW + "║")
+        print(Fore.YELLOW + "╠" + "═"*30 + "╣")
         for k, v in options.items():
-            print(f"{k}. {v[0]}")
-        print("0. Volver")
-        choice = input("Seleccione una opción: ").strip()
+            print(Fore.YELLOW + f"║ {k}. {v[0]:<26}║")
+        print(Fore.YELLOW + "║ 0. Volver" + " "*20 + "║")
+        print(Fore.YELLOW + "╚" + "═"*30 + "╝" + Style.RESET_ALL)
+        choice = input(Fore.GREEN + "Seleccione una opción: " + Style.RESET_ALL).strip()
         if choice == "0":
             break
         if choice not in options:
-            print("Opción inválida")
+            print(Fore.RED + "Opción inválida" + Style.RESET_ALL)
             continue
-        date_in = input("Fecha opcional (dd-mm-YYYY o yyyy-mm-dd, enter para hoy): ").strip()
+        date_in = input(Fore.GREEN + "Fecha opcional (dd-mm-YYYY o yyyy-mm-dd, enter para hoy): " + Style.RESET_ALL).strip()
         if date_in == "":
             date_arg = None
         else:
             valid = _validate_date(date_in)
             if not valid:
-                print("Fecha inválida, use dd-mm-YYYY o yyyy-mm-dd")
+                print(Fore.RED + "Fecha inválida, use dd-mm-YYYY o yyyy-mm-dd" + Style.RESET_ALL)
                 continue
             date_arg = valid
         func = options[choice][1]
@@ -376,19 +386,23 @@ def indicators_menu(finance: Finance, db: Database, user_id: int):
                     retrieved_by= user_id
                 )
         except Exception as e:
-            print("Error al obtener indicador:", e)
+            print(Fore.RED + f"Error al obtener indicador: {e}" + Style.RESET_ALL)
 
 def show_history(db: Database, user_id: int):
-    print("\n== Historial de indicadores consultados ==")
+    print(Fore.MAGENTA + "\n╔" + "═"*50 + "╗")
+    print(Fore.MAGENTA + "║" + Style.BRIGHT + "{:^50}".format("Historial de indicadores consultados") + Style.RESET_ALL + Fore.MAGENTA + "║")
+    print(Fore.MAGENTA + "╚" + "═"*50 + "╝" + Style.RESET_ALL)
     history = db.get_indicator_history(user_id)
 
     if not history:
-        print("No hay registros de consultas.")
+        print(Fore.YELLOW + "No hay registros de consultas." + Style.RESET_ALL)
         return
 
+    print(Fore.MAGENTA + f"{'Fecha':<12} | {'Indicador':<10} | {'Valor':<10} | Fuente")
+    print(Fore.MAGENTA + "-"*50 + Style.RESET_ALL)
     for row in history:
         name, value, date, source = row
-        print(f"{date} | {name.upper()} | {value} | Fuente: {source}")
+        print(Fore.WHITE + f"{date:<12} | {name.upper():<10} | {value:<10} | {source}" + Style.RESET_ALL)
 
 def run_cli():
     db = Database(
@@ -397,15 +411,23 @@ def run_cli():
         dsn=os.getenv("ORACLE_DSN")
     )
 
-    print(db.username, db.password, db.dsn)
+    # print(db.username, db.password, db.dsn)
 
     finance = Finance()
 
-    print("Bienvenido al CLI de indicadores")
+    print(Fore.GREEN + "╔" + "═"*40 + "╗")
+    print(Fore.GREEN + "║" + Style.BRIGHT + "{:^40}".format("Bienvenido ") + Style.RESET_ALL + Fore.GREEN + "║")
+    print(Fore.GREEN + "╚" + "═"*40 + "╝" + Style.RESET_ALL)
     user_id: Optional[int] = None
     while True:
-        print("\n1. Registrar\n2. Login\n3. Consultar indicadores (requiere login)\n4. Ver historial\n0. Salir")
-        opt = input("Elija una opción: ").strip()
+        print(Fore.BLUE + "\n╔" + "═"*40 + "╗")
+        print(Fore.BLUE + "║ 1. Registrar" + " "*27 + "║")
+        print(Fore.BLUE + "║ 2. Login" + " "*31 + "║")
+        print(Fore.BLUE + "║ 3. Consultar indicadores" + " "*15 + "║")
+        print(Fore.BLUE + "║ 4. Ver historial" + " "*23 + "║")
+        print(Fore.BLUE + "║ 0. Salir" + " "*31 + "║")
+        print(Fore.BLUE + "╚" + "═"*40 + "╝" + Style.RESET_ALL)
+        opt = input(Fore.GREEN + "Elija una opción: " + Style.RESET_ALL).strip()
         if opt == "1":
             prompt_register(db)
         elif opt == "2":
@@ -414,19 +436,19 @@ def run_cli():
                 user_id = uid
         elif opt == "3":
             if not user_id:
-                print("Inicie sesión primero")
+                print(Fore.RED + "Inicie sesión primero" + Style.RESET_ALL)
                 continue
             indicators_menu(finance, db, user_id)
         elif opt == "4":
             if not user_id:
-                print("Debe iniciar sesión para ver el historial")
+                print(Fore.RED + "Debe iniciar sesión para ver el historial" + Style.RESET_ALL)
                 continue
             show_history(db, user_id)
         elif opt == "0":
-            print("Saliendo...")
+            print(Fore.YELLOW + "Saliendo..." + Style.RESET_ALL)
             break
         else:
-            print("Opción inválida")
+            print(Fore.RED + "Opción inválida" + Style.RESET_ALL)
 
 
 if __name__ == "__main__":
@@ -438,18 +460,9 @@ if __name__ == "__main__":
         dsn=os.getenv("ORACLE_DSN")
     )
 
-    #db.create_all_tables()
-
     run_cli()
 
 
-class DataParser:
-    """Utilidad para cargar/convertir JSON y XML.
-
-    - Cargar desde string, archivo o URL
-    - Parsear JSON/XML a dict
-    - Convertir dict a JSON o XML (simple)
-    """
 class DataParser:
     ...
     @staticmethod
@@ -471,10 +484,7 @@ class DataParser:
 
     @staticmethod
     def parse_mindicador_indicator(data: Dict[str, Any], indicator_name: Optional[str] = None) -> Dict[str, Any]:
-        """
-        Extrae (name, value, value_date, raw_json) desde la estructura de mindicador.cl.
-        Lanza ValueError si la estructura no contiene la serie esperada.
-        """
+
         serie = data.get("serie") or []
         if not serie:
             raise ValueError("Respuesta sin 'serie'")
